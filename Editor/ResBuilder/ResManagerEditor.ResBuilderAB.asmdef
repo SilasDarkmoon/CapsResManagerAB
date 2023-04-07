@@ -1,0 +1,25 @@
+{
+    "name": "ResManagerEditor.ResBuilderAB",
+    "rootNamespace": "",
+    "references": [
+        "ResManager",
+        "ResManagerEditor",
+        "CapsMods",
+        "CapsModsEditor",
+        "ResManagerEditor.ResBuilder",
+        "ResManagerAB"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "MOD_CAPSRESMANAGER"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

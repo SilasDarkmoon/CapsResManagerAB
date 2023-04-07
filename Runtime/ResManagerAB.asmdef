@@ -1,0 +1,21 @@
+{
+    "name": "ResManagerAB",
+    "rootNamespace": "",
+    "references": [
+        "Unity.Collections.Concurrent",
+        "Unity.IO.Compression",
+        "JsonObject",
+        "ResManagerEntry",
+        "CapsMods",
+        "ResManager"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
