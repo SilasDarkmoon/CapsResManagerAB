@@ -5,7 +5,7 @@ using UnityEditor;
 namespace Capstones.UnityEditorEx
 {
     [InitializeOnLoad]
-    public class CapsVideoClipBuilder : CapsResBuilder.BaseResBuilderEx<CapsVideoClipBuilder>
+    public class CapsVideoClipBuilder : CapsResBuilderAB.BaseResBuilderEx<CapsVideoClipBuilder>
     {
         private static HierarchicalInitializer _Initializer = new HierarchicalInitializer(0);
 
@@ -29,7 +29,7 @@ namespace Capstones.UnityEditorEx
             return null;
         }
 
-        public override void PostBuildWork(string mod, CapsResBuilder.CapsResBuildWork work, string dest)
+        public override void PostBuildWork(string mod, CapsResBuilderAB.CapsResBuildWork work, string dest)
         {
             var interroot = System.IO.Path.GetDirectoryName(dest) + "/tmp/";
             var interdir = interroot + System.IO.Path.GetFileName(dest);

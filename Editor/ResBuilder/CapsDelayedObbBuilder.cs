@@ -46,8 +46,43 @@ namespace Capstones.UnityEditorEx
             var files = PlatDependant.GetAllFiles(folder);
             int fileindex = 0;
 
+            HashSet<int> obbs_index_to_remove = null;
+            List<CapsObbMaker.ObbInfo> main_ex_obbs = null;
+            if (obbs != null)
+            {
+                for (int i = 0; i < obbs.Count; ++i)
+                {
+                    if (obbs[i].Key.StartsWith("main", StringComparison.InvariantCultureIgnoreCase) && !obbs[i].Key.Equals("main", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        if (main_ex_obbs == null)
+                        {
+                            main_ex_obbs = new List<CapsObbMaker.ObbInfo>();
+                        }
+                        main_ex_obbs.Add(obbs[i]);
+                        if (obbs_index_to_remove == null)
+                        {
+                            obbs_index_to_remove = new HashSet<int>();
+                        }
+                        obbs_index_to_remove.Add(i);
+                    }
+                }
+            }
+            if (obbs_index_to_remove != null)
+            {
+                var newobbs = new List<CapsObbMaker.ObbInfo>();
+                for (int i = 0; i < obbs.Count; ++i)
+                {
+                    if (!obbs_index_to_remove.Contains(i))
+                    {
+                        newobbs.Add(obbs[i]);
+                    }
+                }
+                obbs = newobbs;
+            }
+
             HashSet<string> builtKeys = new HashSet<string>();
             List<string> builtKeysList = new List<string>();
+            int mainObbIndex = 0;
             for (int obbindex = 0; ; ++obbindex)
             {
                 CapsObbMaker.ObbInfo curobb;
@@ -55,19 +90,48 @@ namespace Capstones.UnityEditorEx
                 {
                     if (obbindex == 0)
                     {
-                        curobb = obbs[0];
-                        for (int i = 0; i < obbs.Count; ++i)
+                        if (mainObbIndex > 0)
                         {
-                            if (obbs[i].Key.Equals("main", StringComparison.InvariantCultureIgnoreCase))
+                            if (main_ex_obbs != null)
                             {
-                                curobb = obbs[i];
-                                break;
+                                if (mainObbIndex <= main_ex_obbs.Count)
+                                {
+                                    curobb = main_ex_obbs[mainObbIndex - 1];
+                                }
+                                else
+                                {
+                                    curobb = main_ex_obbs[main_ex_obbs.Count - 1];
+                                }
+                            }
+                            else
+                            {
+                                curobb = new CapsObbMaker.ObbInfo();
+                            }
+                        }
+                        else
+                        {
+                            curobb = obbs[0];
+                            for (int i = 0; i < obbs.Count; ++i)
+                            {
+                                if (obbs[i].Key.Equals("main", StringComparison.InvariantCultureIgnoreCase))
+                                {
+                                    curobb = obbs[i];
+                                    break;
+                                }
                             }
                         }
                     }
                     else
                     {
                         curobb = obbs[obbs.Count - 1];
+                        for (int i = obbs.Count - 1; i >= 0; --i)
+                        {
+                            if (!obbs[i].Key.Equals("main", StringComparison.InvariantCultureIgnoreCase))
+                            {
+                                curobb = obbs[i];
+                                break;
+                            }
+                        }
                         for (int i = obbindex - 1; i < obbs.Count; ++i)
                         {
                             if (!obbs[i].Key.Equals("main", StringComparison.InvariantCultureIgnoreCase))
@@ -90,22 +154,31 @@ namespace Capstones.UnityEditorEx
                 {
                     curobb.Key = curobb.Key.ToLower();
                 }
-                if (builtKeys.Contains(curobb.Key) && curobb.Key == "main")
-                {
-                    curobb.Key = "delayed";
-                }
+                //if (builtKeys.Contains(curobb.Key) && curobb.Key == "main")
+                //{
+                //    curobb.Key = "delayed";
+                //}
                 if (builtKeys.Contains(curobb.Key))
                 {
-                    string ukey = curobb.Key + "-" + obbindex;
-                    if (builtKeys.Contains(ukey))
+                    curobb.ObbFileName = null;
+                    var oldkey = curobb.Key;
+                    var splitindex = oldkey.LastIndexOf('-');
+                    if (splitindex > 0)
                     {
-                        for (int i = 1; ; ++i)
+                        var expart = oldkey.Substring(splitindex + 1);
+                        int exindex;
+                        if (int.TryParse(expart, out exindex))
                         {
-                            ukey = curobb.Key + "-" + (obbindex + i);
-                            if (!builtKeys.Contains(ukey))
-                            {
-                                break;
-                            }
+                            oldkey = oldkey.Substring(0, exindex);
+                        }
+                    }
+                    string ukey;
+                    for (int i = 1; ; ++i)
+                    {
+                        ukey = oldkey + "-" + i;
+                        if (!builtKeys.Contains(ukey))
+                        {
+                            break;
                         }
                     }
                     curobb.Key = ukey;
@@ -113,7 +186,7 @@ namespace Capstones.UnityEditorEx
                 builtKeys.Add(curobb.Key);
                 builtKeysList.Add(curobb.Key);
 
-                bool isMainObb = curobb.Key == "main";
+                bool isMainObb = curobb.Key == "main" || mainObbIndex > 0;
                 var obbpath = curobb.ObbFileName;
                 if (string.IsNullOrEmpty(obbpath))
                 {
@@ -159,7 +232,7 @@ namespace Capstones.UnityEditorEx
                     {
                         continue;
                     }
-                    if (!isMainObb)
+                    //if (!isMainObb)
                     {
                         if (!System.IO.File.Exists(file))
                         {
@@ -211,14 +284,15 @@ namespace Capstones.UnityEditorEx
                         {
                             if (curobbsize == 0)
                             { // big file - this single file is larger than obb's limit.
+                                Debug.LogError(file + " is too large. It will be dropped.");
                                 continue;
                             }
                             else
                             {
-                                if (isMainObb && delayedObbInfo.WhiteList != null && delayedObbInfo.WhiteList.Count > 0)
-                                {
-                                    Debug.LogError("main.obb is too large. Remaining files will be dropped.");
-                                }
+                                //if (isMainObb && delayedObbInfo.WhiteList != null && delayedObbInfo.WhiteList.Count > 0)
+                                //{
+                                //    Debug.LogError("main.obb is too large. Remaining files will be dropped.");
+                                //}
                                 break;
                             }
                         }
@@ -257,7 +331,16 @@ namespace Capstones.UnityEditorEx
 
                 if (isMainObb)
                 {
-                    fileindex = 0;
+                    if (fileindex >= files.Length)
+                    {
+                        mainObbIndex = 0;
+                        fileindex = 0;
+                    }
+                    else
+                    {
+                        ++mainObbIndex;
+                        --obbindex;
+                    }
                 }
                 else if (fileindex >= files.Length)
                 {

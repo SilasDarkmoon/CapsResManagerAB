@@ -31,7 +31,7 @@ namespace Capstones.UnityEditorEx
         private static bool CheckAssetInDistributeFlags(string fileName, HashSet<string> flagsSet)
         {
             string mod, dist;
-            CapsResBuilderChecker.GetAssetBundleModAndDist(fileName, out mod, out dist);
+            CapsResBuilderChecker.GetBundleModAndDist(fileName, out mod, out dist);
             if (!string.IsNullOrEmpty(mod) && !flagsSet.Contains(mod))
             {
                 return false;

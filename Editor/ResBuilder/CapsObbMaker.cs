@@ -17,7 +17,7 @@ using CompressionLevel = System.IO.Compression.CompressionLevel;
 namespace Capstones.UnityEditorEx
 {
     [InitializeOnLoad]
-    public class CapsObbMaker_ResBuilderEx : CapsResBuilder.BaseResBuilderEx<CapsObbMaker_ResBuilderEx>
+    public class CapsObbMaker_ResBuilderEx : CapsResBuilderAB.BaseResBuilderEx<CapsObbMaker_ResBuilderEx>
     {
         private static HierarchicalInitializer _Initializer = new HierarchicalInitializer(0);
 

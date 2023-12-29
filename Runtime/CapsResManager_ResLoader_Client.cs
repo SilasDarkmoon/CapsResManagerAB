@@ -123,7 +123,7 @@ namespace Capstones.UnityEngineEx
                 System.IO.Stream stream = null;
                 try
                 {
-                    stream = LoadFileInStreaming("res/builtin-scenes.txt");
+                    stream = ResManager.LoadFileInStreaming("res/builtin-scenes.txt");
                     if (stream != null)
                     {
                         sr = new System.IO.StreamReader(stream);
@@ -536,6 +536,28 @@ namespace Capstones.UnityEngineEx
                 }
             }
 
+            public static IAssetInfo PreloadAsset(string asset)
+            {
+#if COMPATIBLE_RESMANAGER_V1
+                asset = CompatibleAssetName(asset);
+#endif
+                CapsResManifestNode node;
+                if (CollapsedManifest.TryGetItem(asset, out node) && node.Item != null)
+                {
+                    var item = node.Item;
+                    var ai = CreateAssetInfo(item);
+                    if (ai != null)
+                    {
+                        ai.Preload();
+                        return ai;
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
+                return null;
+            }
             private static Object LoadAsset(CapsResManifestItem item, Type type)
             {
                 var ai = CreateAssetInfo(item);
@@ -720,6 +742,10 @@ namespace Capstones.UnityEngineEx
                 return work;
             }
 
+            public object Preload(string asset)
+            {
+                return PreloadAsset(asset);
+            }
             public Object LoadRes(string asset, Type type)
             {
                 return LoadAsset(asset, type);
@@ -869,6 +895,45 @@ namespace Capstones.UnityEngineEx
                         }
                     }
                 }
+            }
+            public List<string> ParseRunningResKeys()
+            {
+                List<string> keys = new List<string>();
+                var maniabs = ResManagerAB.GetAllResManiBundleNames();
+                if (maniabs != null && maniabs.Length > 0)
+                {
+                    for (int i = 0; i < maniabs.Length; ++i)
+                    {
+                        var maniab = maniabs[i];
+                        if (maniab.EndsWith(".m.ab"))
+                        {
+                            var reskey = maniab.Substring("mani/".Length, maniab.Length - "mani/".Length - ".m.ab".Length);
+                            keys.Add(reskey);
+                        }
+                    }
+                }
+                return keys;
+            }
+            public List<string> GetLoadedBundleFileNames()
+            {
+                List<string> result = new List<string>();
+                foreach (var kvploaded in ResManagerAB.LoadedAssetBundles)
+                {
+                    if (kvploaded.Value != null)
+                    {
+                        var abname = kvploaded.Key;
+                        if (kvploaded.Value.RealName != null)
+                        {
+                            abname = kvploaded.Value.RealName;
+                        }
+                        result.Add(abname);
+                    }
+                }
+                return result;
+            }
+            public void AfterResFilesDeployed()
+            {
+                ResManagerAB.ForgetMissingAssetBundles();
             }
         }
         public static ClientResLoader ClientResLoaderInstance = new ClientResLoader();
